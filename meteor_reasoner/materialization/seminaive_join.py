@@ -22,7 +22,17 @@ def seminaive_join(rule, D,  delta_old, delta_new, D_index=None, must_literals=N
     head_predicate = rule.head.get_predicate()
     literals = rule.body + rule.negative_body
 
+    # print("rule body ")
+    # print( [ str( b ) for b in rule.body])
+    # print("rule neg body " + str(rule.negative_body))
+
+
+
     def ground_body(global_literal_index, visited, delta, context):
+        print("global index " +  str(global_literal_index))
+        print("literals ")
+        print( [ str(l) for l in literals] )
+        print("--------------")
         if global_literal_index == len(literals):
             T = []
             for i in range(len(rule.body)):
@@ -105,9 +115,10 @@ def seminaive_join(rule, D,  delta_old, delta_new, D_index=None, must_literals=N
 
         else:
             current_literal = copy.deepcopy(literals[global_literal_index])
+            print('current literal ' + str(current_literal))
             if not isinstance(current_literal, BinaryLiteral):
                 if current_literal.get_predicate() in ["Bottom", "Top"]:
-                    ground_body(global_literal_index+1, delta, context)
+                    ground_body(global_literal_index+1, visited, delta, context) # ground_body called without 'visisted' parameter, no default value
                 else:
                     for tmp_entity, tmp_context in ground_generator(current_literal, context, D, D_index, delta_old, global_literal_index==visited, global_literal_index > visited):
                         tmp_delata = {global_literal_index: [tmp_entity]}
