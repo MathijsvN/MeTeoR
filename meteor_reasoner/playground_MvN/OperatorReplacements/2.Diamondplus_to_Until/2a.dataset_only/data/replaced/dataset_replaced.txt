@@ -1,1 +1,1 @@
-TopUntil[2, 2]A@0
+TopUntil[1,2]A@0
