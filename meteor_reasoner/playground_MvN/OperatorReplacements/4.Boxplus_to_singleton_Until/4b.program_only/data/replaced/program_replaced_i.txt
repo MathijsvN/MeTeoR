@@ -1,0 +1,1 @@
+B:-Diamondplus[1,1]AUntil[2,2]Top
