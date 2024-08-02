@@ -1,1 +1,1 @@
-B:-Diamondminus[3,4]A
+B:-Boxminus[3,4]A
