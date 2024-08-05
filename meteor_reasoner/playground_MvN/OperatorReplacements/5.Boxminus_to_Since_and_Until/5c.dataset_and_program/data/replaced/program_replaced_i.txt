@@ -1,0 +1,1 @@
+B:-Diamondminus[2.5,3](ASince[1,1.001]Top),Diamondminus[4,4.5](AUntil[1,1.002]Top)

@@ -1,0 +1,2 @@
+Diamondminus[0,1](ASince[2,2.001]Top)@0
+Diamondminus[3,4](AUntil[2,2.002])@0
