@@ -59,12 +59,9 @@ def parse_rule(line):
                 raise Exception("{} has an incorrect syntax!".format(literal_str))
             negative_body.append(literal)
 
-    ordered_literals = []
-    for literal in literals:
-        if isinstance(literal, BinaryLiteral):
-            ordered_literals.append(literal)
-            literals.remove(literal)
-    literals = sorted(literals, key=lambda item: len(item.get_entity()), reverse=True)
+    ordered_literals    = [ lit for lit in literals if isinstance(lit, BinaryLiteral) ]
+    literals = [ lit for lit in literals if not ( lit in ordered_literals ) ]
+    # literals = sorted(literals, key=lambda item: len(item.get_entity()), reverse=True)
     ordered_literals = ordered_literals + literals
     rule = Rule(head_atom, ordered_literals, negative_body=negative_body)
     return rule
@@ -308,9 +305,8 @@ def parse_literal(literal):
 
     """
 
-    # Does it start with {...} ?
-    # ---- Regex: ^\{.+\}[^\}]? ---
-    # If yes, then find the Since or Until and parse the left and right literals.
+    # Does it start with a parenthesed expression {...} ?
+    # If yes, then isolate the literal between the parentheses
     if literal.startswith("{") :
         stack = list(literal[::-1])
         parentheses_end = False
@@ -320,7 +316,7 @@ def parse_literal(literal):
             if char == "}" :
                 k += -1
                 if k == 0 :
-                    index_end =  literal.index(char) # Not sure it this is the right code
+                    index_end =  literal.index(char)
                     parentheses_end = True
             elif char == "{" :
                 k += 1
@@ -348,18 +344,23 @@ def parse_literal(literal):
         result = re.findall("|".join([since_pattern00, since_pattern01, until_pattern11, until_pattern12, UNTIL_pattern02, UNTIL_pattern03,
                                   UNTIL_pattern13, UNTIL_pattern14, since_pattern1,
                                   since_pattern3, until_pattern2, unitl_pattern4, UNTIL_pattern5, UNTIL_pattern6]), literal[index_end+1:])
+        #  If the literal behind the parentheses starts with a binary operator, the parenthesed part is the left literal of said operator. 
         if len(result) != 0 :
-            # Copied ----
             begin_index = literal[index_end+1:].index(result[0])
-            left_literal = literal[1:index_end]
             right_literal = literal[(index_end +1) + begin_index + len(result[0]):]
-            left_literal = parse_literal(left_literal)
+            left_literal = literal[1:index_end]
             right_literal = parse_literal(right_literal)
 
             op = parse_operator(result[0])
-            b_literal = BinaryLiteral(left_literal, right_literal, op)
+            parsed_literal = BinaryLiteral(left_literal, right_literal, op)
             # Copied ----
-        return b_literal
+        else :
+            # If there is no binary operator, it must be a standalone literal, surrounded by parentheses.
+            if index_end != len(literal) :
+                raise ValueError("The parentheses can not be parsed correctly!")
+            else :
+                parsed_literal = literal[1:index_end]
+        return parsed_literal
     
     # Otherwise
     # Does it start with Diamondplus/-minus or Boxplus/-minus?
@@ -405,7 +406,7 @@ def parse_literal(literal):
                 operators.append(operator_ins)
 
             atom_str = literal[len("".join(result)):]
-            atom = parse_atom(atom_str)
+            atom = parse_literal(atom_str)
             literal = Literal(atom, operators)
             return literal
         # Copied ----
@@ -424,6 +425,6 @@ def parse_literal(literal):
 
 
 if __name__ == "__main__":
-    operator_str = "{Diamondminus[3,4]A}Until[2,2.002]B"
+    operator_str = "A(X, mike)@[1,2]"
     lit = parse_literal(operator_str)
     print(lit)

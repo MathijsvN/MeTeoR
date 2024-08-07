@@ -59,11 +59,8 @@ def parse_rule(line):
                 raise Exception("{} has an incorrect syntax!".format(literal_str))
             negative_body.append(literal)
 
-    ordered_literals = []
-    for literal in literals:
-        if isinstance(literal, BinaryLiteral):
-            ordered_literals.append(literal)
-            literals.remove(literal)
+    ordered_literals    = [ lit for lit in literals if isinstance(lit, BinaryLiteral) ]
+    literals = [ lit for lit in literals if not ( lit in ordered_literals ) ]
     literals = sorted(literals, key=lambda item: len(item.get_entity()), reverse=True)
     ordered_literals = ordered_literals + literals
     rule = Rule(head_atom, ordered_literals, negative_body=negative_body)
@@ -399,6 +396,6 @@ def parse_literal(literal):
 
 
 if __name__ == "__main__":
-    operator_str = "ALWAYS[-1,-3]A"
+    operator_str = "A(X, mike)@[1,2]"
     lit = parse_literal(operator_str)
     print(lit)
