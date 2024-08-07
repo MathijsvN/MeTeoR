@@ -20,7 +20,7 @@ def random_return_name():
     return strname
 
 
-def parse_rule(line):
+def parse_rule(line : str):
     """
     Parse a string-formed rule.
     Args:
@@ -67,7 +67,7 @@ def parse_rule(line):
     return rule
 
 
-def parse_str_fact(line):
+def parse_str_fact(line : str):
 
     result = re.search(FACT_WITH_ENTITY_PATTERN, line)
     if result:
@@ -127,7 +127,7 @@ def parse_str_fact(line):
         return predicate, entity, Interval(left_value, right_value, left_open, right_open)
 
 
-def parse_atom(atom_str):
+def parse_atom(atom_str : str):
     """
     Parse a string-form atom into an atom instance.
     Args:
@@ -156,7 +156,7 @@ def parse_atom(atom_str):
     return atom
 
 
-def parse_body(body):
+def parse_body(body : str):
     """
     Split literals separated by comma in the body into a list.
 
@@ -190,7 +190,7 @@ def parse_body(body):
     return literals
 
 
-def parse_operator(operator_str):
+def parse_operator(operator_str : str):
     """
     Parse a string-form operator into a operator instance.
 
@@ -206,40 +206,34 @@ def parse_operator(operator_str):
         if b is None:
             raise ValueError("The interval can not be parsed correctly!")
 
-        left_value = Decimal(b.group(3))
+        # left_value = Decimal(b.group(3))
         right_value = Decimal(b.group(3))
-        left_open, right_open = False, False
+        # left_open, right_open = False, False
+            
+        left_open = (b.group(2) == "(")
+        right_open = (b.group(4) == ")")
 
-        if b.group(2) == "(":
-            left_open = True
-
-        if b.group(4) == ")":
-            right_open = True
-
-        if b.group(1) == "SOMETIME" and left_value >= 0:
-            return Operator("Diamondplus", Interval(left_value, right_value, left_open, right_open))
-        elif b.group(1) == "SOMETIME" and left_value < 0:
-            return Operator("Diamondminus", Interval(-right_value, -left_value, right_open, left_open))
-        elif b.group(1) == "ALWAYS" and left_value >= 0:
-            return Operator("Boxplus", Interval(left_value, right_value, left_open, right_open))
-        elif b.group(1) == "ALWAYS" and left_value <= 0:
-            return Operator("Boxminus", Interval(-right_value, -left_value, right_open, left_open))
-        elif b.group(1) == "UNTIL" and left_value < 0:
-            return Operator("Since", Interval(-right_value, -left_value, right_open, left_open))
-        elif b.group(1) == "UNTIL" and left_value >=0:
-            return Operator("Until", Interval(left_value, right_value, left_open, right_open))
-        else:
-            return Operator(b.group(1), Interval(left_value, right_value, left_open, right_open))
+        # if b.group(1) == "SOMETIME" and left_value>=0:
+        #     return Operator("Diamondplus", Interval(left_value, right_value, left_open, right_open))
+        # elif b.group(1) == "SOMETIME" and left_value<0:
+        #     return Operator("Diamondminus", Interval(-right_value,-left_value, right_open, left_open))
+        # elif b.group(1) == "ALWAYS" and left_value>=0:
+        #     return Operator("Boxplus", Interval(left_value, right_value, left_open, right_open))
+        # elif b.group(1) == "ALWAYS" and left_value<0:
+        #     return Operator("Boxminus", Interval(-right_value, -left_value, right_open, left_open))
+        # elif b.group(1) == "UNTIL" and left_value<0:
+        #     return Operator("Since", Interval(-right_value, -left_value, right_open, left_open))
+        # elif b.group(1) == "UNTIL" and left_value>=0:
+        #     return Operator("Until", Interval(left_value, right_value, left_open, right_open))
+        # else:
+        #     return Operator(b.group(1), Interval(left_value, right_value, left_open, right_open))
+    else :
+        right_value = Decimal(b.group(4))
+        left_open = (b.group(2) == "(")
+        right_open = (b.group(5) == ")")
 
     left_value = Decimal(b.group(3))
-    right_value = Decimal(b.group(4))
     left_open, right_open = False, False
-
-    if b.group(2) == "(":
-        left_open = True
-
-    if b.group(5) == ")":
-        right_open = True
 
     if b.group(1) == "SOMETIME" and left_value>=0:
         return Operator("Diamondplus", Interval(left_value, right_value, left_open, right_open))
@@ -247,24 +241,24 @@ def parse_operator(operator_str):
         return Operator("Diamondminus", Interval(-right_value,-left_value, right_open, left_open))
     elif b.group(1) == "ALWAYS" and left_value>=0:
         return Operator("Boxplus", Interval(left_value, right_value, left_open, right_open))
-    elif b.group(1) == "ALWAYS" and left_value < 0:
+    elif b.group(1) == "ALWAYS" and left_value<0: 
         return Operator("Boxminus", Interval(-right_value, -left_value, right_open, left_open))
-    elif b.group(1) == "UNTIL" and left_value < 0:
+    elif b.group(1) == "UNTIL" and left_value<0:
         return Operator("Since", Interval(-right_value, -left_value, right_open, left_open))
-    elif b.group(1) == "UNTIL" and left_value >= 0:
+    elif b.group(1) == "UNTIL" and left_value>=0:
         return Operator("Until", Interval(left_value, right_value, left_open, right_open))
     else:
        return Operator(b.group(1), Interval(left_value, right_value, left_open, right_open))
 
 
-def parse_literal(literal):
+def parse_literal(literal : str):
     """
     We write different regex expressions to parse the string-form literal
     Args:
         literal (str):
 
     Returns:
-        BinaryLiteral instance or Literal instance.
+        AbstractLiteral instance.
 
     """
 
@@ -307,23 +301,24 @@ def parse_literal(literal):
         result = re.findall("|".join([since_pattern00, since_pattern01, until_pattern11, until_pattern12, UNTIL_pattern02, UNTIL_pattern03,
                                   UNTIL_pattern13, UNTIL_pattern14, since_pattern1,
                                   since_pattern3, until_pattern2, unitl_pattern4, UNTIL_pattern5, UNTIL_pattern6]), literal[index_end+1:])
-        #  If the literal behind the parentheses starts with a binary operator, the parenthesed part is the left literal of said operator. 
+        #  If the parentheses are followed by a binary operator, the parenthesed part is the left literal of said operator. 
         if len(result) != 0 :
             begin_index = literal[index_end+1:].index(result[0])
-            right_literal = literal[(index_end +1) + begin_index + len(result[0]):]
+
             left_literal = literal[1:index_end]
+            right_literal = literal[(index_end +1) + begin_index + len(result[0]):]
+            left_literal = parse_literal(left_literal)
             right_literal = parse_literal(right_literal)
 
             op = parse_operator(result[0])
-            parsed_literal = BinaryLiteral(left_literal, right_literal, op)
-            # Copied ----
+            return BinaryLiteral(left_literal, right_literal, op)
         else :
             # If there is no binary operator, it must be a standalone literal, surrounded by parentheses.
             if index_end != len(literal) :
                 raise ValueError("The parentheses can not be parsed correctly!")
             else :
-                parsed_literal = literal[1:index_end]
-        return parsed_literal
+                # TODO make this into a proper literal
+                return parse_literal(literal[1:index_end])
     
     # Otherwise
     # Does it start with Diamondplus/-minus or Boxplus/-minus?
@@ -361,28 +356,20 @@ def parse_literal(literal):
                                       pattern2, pattern3, pattern4, pattern4_1, pattern4_2]), literal)
         
         # If yes, then parse the remaining literal.
-        # Copied ----
         if len(result) != 0 :
-            operators = []
-            for operator_str in result:
-                operator_ins = parse_operator(operator_str)
-                operators.append(operator_ins)
+            operator_str = result[0]
+            operator = parse_operator(operator_str)
 
-            atom_str = literal[len("".join(result)):]
-            atom = parse_literal(atom_str)
-            literal = Literal(atom, operators)
-            return literal
-        # Copied ----
+            next_literal_str = literal[len(operator_str):]
+            next_literal = parse_literal(next_literal_str)
+
+            return Literal(next_literal, operator)
 
 
     # Otherwise
         else :
             # parse the literal as an atom.
-            # Copied ----
-            atom = parse_atom(literal)
-            t_literal = Literal(atom, [])
-            return t_literal
-            # Copied ----
+            return parse_atom(literal)
 
 
 
