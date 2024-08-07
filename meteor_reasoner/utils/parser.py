@@ -68,45 +68,41 @@ def parse_rule(line):
 
 
 def parse_str_fact(line):
+
     result = re.search(FACT_WITH_ENTITY_PATTERN, line)
     if result:
         predicate = result.group(1)
         entity = tuple([Term(item) for item in result.group(2).split(",")])
         span = result.group(3)
-        b = re.search(INTERVAL_TWO_POINTS_PATTERN, span)
-        if b is None:  # contain one point
-            try:
-                Decimal(span)
-                return predicate, entity, Interval(Decimal(span), Decimal(span), False, False)
-            except ValueError:
-                b = re.search(INTERVAL_ONE_POINT_PATTERN, span)
-                if b is None:
-                    raise ValueError("The interval can not be parsed correctly!")
 
-                left_value = Decimal(b.group(2))
-                right_value = Decimal(b.group(2))
-                left_open, right_open = False, False
-
-                if b.group(1) == "(":
-                    left_open = True
-
-                if b.group(3) == ")":
-                    right_open = True
-
-                if not Interval.is_valid_interval(left_value, right_value, left_open, right_open):
-                    raise ValueError("{} contain an invalid interval!".format(line))
-
-                return predicate, entity, Interval(left_value, right_value, left_open, right_open)
-
+    else:
+        result = re.search(FACT_WITHOUT_ENTITY_PATTERN, line)
+        if result:
+            predicate = result.group(1)
+            entity = tuple([Term("nan")])
+            span = result.group(2)
         else:
+            raise ValueError("{} is an invalid fact!".format(line))
+
+    b = re.search(INTERVAL_TWO_POINTS_PATTERN, span)
+    
+    if b is None:  # contain one point
+        try:
+            Decimal(span)
+            return predicate, entity, Interval(Decimal(span), Decimal(span), False, False)
+        except ValueError:
+            b = re.search(INTERVAL_ONE_POINT_PATTERN, span)
+            if b is None:
+                raise ValueError("The interval({}) can not be parsed correctly!".format(span))
+
             left_value = Decimal(b.group(2))
-            right_value = Decimal(b.group(3))
+            right_value = Decimal(b.group(2))
             left_open, right_open = False, False
 
             if b.group(1) == "(":
                 left_open = True
 
-            if b.group(4) == ")":
+            if b.group(3) == ")":
                 right_open = True
 
             if not Interval.is_valid_interval(left_value, right_value, left_open, right_open):
@@ -115,53 +111,21 @@ def parse_str_fact(line):
             return predicate, entity, Interval(left_value, right_value, left_open, right_open)
 
     else:
-        result = re.search(FACT_WITHOUT_ENTITY_PATTERN, line)
-        if result:
-            predicate = result.group(1)
-            entity = tuple([Term("nan")])
-            span = result.group(2)
-            b = re.search(INTERVAL_TWO_POINTS_PATTERN, span)
-            if b is None:  # contain one point
-                try:
-                    Decimal(span)
-                    return predicate, entity, Interval(Decimal(span), Decimal(span), False, False)
-                except ValueError:
-                    b = re.search(INTERVAL_ONE_POINT_PATTERN, span)
-                    if b is None:
-                        raise ValueError("The interval({}) can not be parsed correctly!".format(span))
+        left_value = Decimal(b.group(2))
+        right_value = Decimal(b.group(3))
+        left_open, right_open = False, False
 
-                    left_value = Decimal(b.group(2))
-                    right_value = Decimal(b.group(2))
-                    left_open, right_open = False, False
+        if b.group(1) == "(":
+            left_open = True
 
-                    if b.group(1) == "(":
-                        left_open = True
+        if b.group(4) == ")":
+            right_open = True
 
-                    if b.group(3) == ")":
-                        right_open = True
+        if not Interval.is_valid_interval(left_value, right_value, left_open, right_open):
+            raise ValueError("{} contain an invalid interval!".format(line))
 
-                    if not Interval.is_valid_interval(left_value, right_value, left_open, right_open):
-                        raise ValueError("{} contain an invalid interval!".format(line))
-
-                    return predicate, entity, Interval(left_value, right_value, left_open, right_open)
-
-            else:
-                left_value = Decimal(b.group(2))
-                right_value = Decimal(b.group(3))
-                left_open, right_open = False, False
-
-                if b.group(1) == "(":
-                    left_open = True
-
-                if b.group(4) == ")":
-                    right_open = True
-
-                if not Interval.is_valid_interval(left_value, right_value, left_open, right_open):
-                    raise ValueError("{} contain an invalid interval!".format(line))
-
-                return predicate, entity, Interval(left_value, right_value, left_open, right_open)
-        else:
-            raise ValueError("{} is an invalid fact!".format(line))
+        return predicate, entity, Interval(left_value, right_value, left_open, right_open)
+        
 
 
 def parse_atom(atom_str):
